@@ -1,8 +1,10 @@
 import tagpy
 from provider import Provider
+from flibrary.attributes import *
+
 
 class TaglibProvider(Provider):
-    def getAttributes(self, fileName, fileObject):
+    def getAttributes(self, fileName, fileObject, fileStat, fileAttributes):
         try:
             ref = tagpy.FileRef(fileName)
         except ValueError:
@@ -17,21 +19,21 @@ class TaglibProvider(Provider):
         track = tags.track
         year = tags.year
         
-        data = {}
+        data = fileAttributes
         data["class"] = "audio"
         
         if title is not None:
-            data["generic/title"] = title
+            data[ATTR_GENERIC_TITLE] = title
         if album is not None:
-            data["generic/album"] = album
+            data[ATTR_GENERIC_ALBUM] = album
         if artist is not None:
-            data["generic/artist"] = artist
+            data[ATTR_GENERIC_ARTIST] = artist
         if genre is not None:
             data["audio/genre"] = genre
         if track is not None:
             data["audio/trackno"] = track
         if year is not None:
-            data["audio/year"] = year
+            data[ATTR_GENERIC_YEAR] = year
             
         file = ref.file()
         if "xiphComment" in dir(file):
@@ -44,5 +46,5 @@ class TaglibProvider(Provider):
             if "TOTALTRACKS" in fields:
                 data["audio/totaltracks"] = fields["TOTALTRACKS"][0]
             if "RATING:BANSHEE" in fields:
-                data["generic/rating"] = float(fields["RATING:BANSHEE"][0])
+                data[ATTR_GENERIC_RATING] = float(fields["RATING:BANSHEE"][0])
         return data
