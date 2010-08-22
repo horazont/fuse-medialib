@@ -6,11 +6,25 @@ class NodeError(Exception):
     pass
 
 class Node(object):
-    def __init__(self, parent, library=None, leafattrib=None):
+    def __init__(self, parent, library=None, nameformat=None, nameargs=None, leafattrib=None):
         self.parent = parent
         self.library = library
         self.objectIdCache = None
         self.leafAttrib = leafattrib
+        if nameformat is not None:
+            self.nameFormat = nameformat
+            if nameargs is None:
+                self.nameArgs = ()
+            else:
+                if isinstance(nameargs, basestring):
+                    self.nameArgs = list(nameargs.split(" "))
+                else:
+                    self.nameArgs = nameargs
+        else:
+            self.nameFormat = None
+            self.nameArgs = None
+            if nameargs is not None:
+                raise NodeError("nameargs without nameformat given.")
         
     def _getAttributeId(self, name):
         store = self.getStore()
@@ -22,13 +36,15 @@ class Node(object):
     def addNode(self, node):
         raise NodeError("Cannot add a node here.")
         
-    def getLeafAttrib(self):
-        if self.leafAttrib is not None:
+    def getNameFormat(self):
+        if self.nameFormat is not None:
+            return self.nameFormat, self.nameArgs
+        elif self.leafAttrib is not None:
             return self.leafAttrib
         elif self.parent is not None:
-            return self.parent.getLeafAttrib()
+            return self.parent.getNameFormat()
         else:
-            return u"generic/title"
+            raise NodeError("Neither nameformat nor leafattrib assigned to any node in this path.")
         
     def getStore(self):
         if self.parent == None:
@@ -78,7 +94,7 @@ class Node(object):
         return False
         
     def cloneForParent(self, newParent):
-        node = Node(newParent, library = self.library, leafattrib = self.leafAttrib)
+        node = Node(newParent, library = self.library, leafattrib = self.leafAttrib, nameformat = self.nameFormat, nameargs = self.nameArgs)
     
     def initCloneForParent(self, node):
         pass
@@ -100,7 +116,7 @@ class NodeContainer(Node):
         return unicode(self.__class__.__name__)+"("+s+")"
         
     def cloneForParent(self, newParent):
-        node = NodeContainer(parent, library = self.library, leafattrib = self.leafAttrib)
+        node = NodeContainer(parent, library = self.library, leafattrib = self.leafAttrib, nameformat = self.nameFormat, nameargs = self.nameArgs)
         self.initCloneForParent(self, node)
         return node
         

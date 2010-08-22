@@ -1,14 +1,12 @@
 <?xml version="1.0" standalone="yes" ?>
-<filter attrib="class" value="audio">
+<filter attrib="class" value="audio" leafattrib="generic/title">
     <folder name="Artist">
         <folders attrib="generic/author" prefix="">
             <leaffolder name="&lt; All &gt;" />
-            <folders attrib="generic/album" showleafs="true" nameformat="%s. %s" nameargs="audio/trackno generic/title"/>
+            <folders attrib="generic/album" showleafs="true" nameformat="%s. %s. %s" nameargs="audio/discno audio/trackno generic/title"/>
         </folders>
     </folder>
     <folder name="Album">
-        <folders attrib="generic/album">
-            <folders attrib="generic/album" showleafs="true" nameformat="%s. %s" nameargs="audio/trackno generic/title"/>
-        </folders>
+        <folders attrib="generic/album" showleafs="true" nameformat="%s. %s. %s" nameargs="audio/discno audio/trackno generic/title" />
     </folder>
 </filter>

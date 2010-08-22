@@ -31,7 +31,7 @@ class NodeFilter(NodeFolder):
             fsnodes = []
             selection = self.select()
             for obj in selection:
-                fsnodes += [FSNodeLibraryObject(obj, self.getLeafAttrib())]
+                fsnodes += [FSNodeLibraryObject(obj, self.getNameFormat())]
             return iter(fsnodes)
         else:
             fsnodes = []

@@ -17,7 +17,7 @@ class NodeLeafFolder(Node):
         return u"showing all objects in current selection" % (self.attrib, self.value)
         
     def cloneForParent(self, newParent):
-        node = NodeLeafFolder(newParent, name = self.name, library = self.library, leafattrib = self.leafAttrib)
+        node = NodeLeafFolder(newParent, name = self.name, library = self.library, leafattrib = self.leafAttrib, nameformat = self.nameFormat, nameargs = self.nameArgs)
         super(NodeLeafFolder, self).initCloneForParent(node)
         return node
         

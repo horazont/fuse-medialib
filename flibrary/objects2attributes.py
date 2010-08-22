@@ -63,6 +63,13 @@ class AttributeDict(object):
             raise AttributeError("Library attribute \"%s\" does not exist." % name)
         assoc = self._getAssociation(attrib, True)
         assoc.value = unicode(value)
+    
+    def __contains__(self, name):
+        attrib = self._getAttributeByName(unicode(name), False)
+        if attrib is None:
+            return False
+        assoc = self._getAssociation(attrib, False)
+        return assoc is not None
 
 
 def _initAttributeDict(self):

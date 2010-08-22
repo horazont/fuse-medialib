@@ -22,7 +22,7 @@ class NodeFolder(NodeContainer):
         return u"\""+self.name+"\""
         
     def cloneForParent(self, newParent):
-        node = NodeFolder(newParent, name = self.name, library = self.library, leafattrib = self.leafAttrib)
+        node = NodeFolder(newParent, name = self.name, library = self.library, leafattrib = self.leafAttrib, nameformat = self.nameFormat, nameargs = self.nameArgs)
         super(NodeFolder, self).initCloneForParent(node)
         return node
 

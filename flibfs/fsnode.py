@@ -59,11 +59,15 @@ class FSNonLeafNode(FSNode):
     
 
 class FSNodeLibraryObject(FSNode):
-    def __init__(self, obj, displayAttrib):
+    def __init__(self, obj, nameFormat):
         FSNode.__init__(self)
         self.obj = obj
         self.objstat = None
-        self.displayAttrib = displayAttrib
+        if isinstance(nameFormat, basestring):
+            self.name = self.obj[nameFormat]
+        else:
+            args = tuple([self.obj[arg] if arg in self.obj else "" for arg in nameFormat[1]])
+            self.name = nameFormat[0] % args
         
     def isLeaf(self):
         return True
@@ -88,7 +92,7 @@ class FSNodeLibraryObject(FSNode):
         return self.obj.realFileName
         
     def getName(self):
-        return self.obj[self.displayAttrib]
+        return self.name
         
     def toDirentry(self):
         return Direntry(self.getName().encode("utf-8"))

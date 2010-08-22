@@ -24,3 +24,8 @@ class Object(object):
         if self.attributes is None:
             Object._initAttributeDict(self)
         self.attributes[name] = value
+        
+    def __contains__(self, name):
+        if self.attributes is None:
+            Object._initAttributeDict(self)
+        return name in self.attributes

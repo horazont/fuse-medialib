@@ -43,7 +43,7 @@ class NodeFolders(NodeContainer):
         return iter([FSNodeStructureObject(node) for node in self.getExpansion()])
         
     def cloneForParent(self, newParent):
-        node = NodeFolders(newParent, attrib = self.attrib, prefix = self.prefix, showleafs = self.showleafs, library = self.library, leafattrib = self.leafAttrib)
+        node = NodeFolders(newParent, attrib = self.attrib, prefix = self.prefix, showleafs = self.showleafs, library = self.library, leafattrib = self.leafAttrib, nameformat = self.nameFormat, nameargs = self.nameArgs)
         super(NodeFolders, self).initCloneForParent(node)
         return node
 
