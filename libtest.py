@@ -8,5 +8,5 @@ import flibrary.objects2attributes
 import os.path
 
 lib = Library("mysql://fuselib@localhost/fuselib", True)
-lib.addProvider(TaglibProvider);
+lib.addProvider(TaglibProvider());
 lib.scanDirectory(os.path.expanduser("~/Music/"))
