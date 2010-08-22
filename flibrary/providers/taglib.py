@@ -2,7 +2,7 @@ import tagpy
 from provider import Provider
 
 class TaglibProvider(Provider):
-    def getAttributes(self, fileName, fileObject):
+    def getAttributes(self, fileName, fileObject, fileStat, fileAttributes):
         try:
             ref = tagpy.FileRef(fileName)
         except ValueError:
@@ -17,7 +17,7 @@ class TaglibProvider(Provider):
         track = tags.track
         year = tags.year
         
-        data = {}
+        data = fileAttributes
         data["class"] = "audio"
         
         if title is not None:

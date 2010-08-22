@@ -1,0 +1,6 @@
+
+ATTR_GENERIC_TITLE = "generic/title"
+ATTR_GENERIC_AUTHOR = "generic/author"
+ATTR_GENERIC_ARTIST = ATTR_GENERIC_AUTHOR
+ATTR_GENERIC_YEAR = "generic/year"
+ATTR_GENERIC_RATING = "generic/rating"

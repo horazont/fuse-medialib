@@ -10,46 +10,39 @@ class Library(object):
         self.store = Store(self.database)
         
         if initdb:
-            #self.store.execute("""CREATE TABLE IF NOT EXISTS `attributes` (
-            #    id INTEGER AUTO_INCREMENT PRIMARY KEY,
-            #    name VARCHAR(255) UNIQUE
-            #)""")
-            #self.store.execute("""CREATE TABLE IF NOT EXISTS `attributevalues` (
-            #    id INTEGER AUTO_INCREMENT PRIMARY KEY,
-            #    attribute_id INTEGER REFERENCES attributes (id),
-            #    value VARCHAR(2047),
-            #    INDEX value (value),
-            #    INDEX attribvalue (attribute_id, value),
-            #    FULLTEXT INDEX (value)
-            #)""")
-            #self.store.execute("""CREATER TABLE IF NOT EXISTS `objects` (
-            #    id INTEGER AUTO_INCREMENT PRIMARY KEY,
-            #    realFileName VARCHAR(2047),
-            #    INDEX realFileName (realFileName), 
-            #    FULLTEXT INDEX (realFileName)
-            #)""")
-            #self.store.execute("""CREATE TABLE IF NOT EXISTS `objectattributes` (
-            #    object_id INTEGER REFERENCES objects (id),
-            #    value_id INTEGER REFERENCES attributevalues (id),
-            #    PRIMARY KEY (object_id, value_id)
-            #)""")
-            self.store.execute("CREATE TABLE IF NOT EXISTS `attributes` ("
-                "id INTEGER AUTO_INCREMENT PRIMARY KEY, "
-                "name VARCHAR(255) UNIQUE"
-                ")");
-            self.store.execute("CREATE TABLE IF NOT EXISTS `objects` ("
-                "id INTEGER AUTO_INCREMENT PRIMARY KEY, "
-                "realFileName VARCHAR(2047), "
-                "INDEX realFileName (realFileName), "
-                "FULLTEXT INDEX (realFileName)"
-                ")");
-            self.store.execute("CREATE TABLE IF NOT EXISTS `objects2attributes` ("
-                "object_id INTEGER REFERENCES objects (id), "
-                "attribute_id INTEGER REFERENCES attributes (id), "
-                "value VARCHAR(2047), "
-                "INDEX value (value), "
-                "PRIMARY KEY (object_id, attribute_id)"
-                ")");
+            self.store.execute("""CREATE TABLE IF NOT EXISTS `attributes` (
+                id INTEGER AUTO_INCREMENT PRIMARY KEY, 
+                name VARCHAR(255) UNIQUE COMMENT 'attribute name'
+            )""")
+            self.store.execute("""CREATE TABLE IF NOT EXISTS `objects` (
+                id INTEGER AUTO_INCREMENT PRIMARY KEY, 
+                realFileName VARCHAR(2047) COMMENT 'where to find that on the file system', 
+                mtime BIGINT COMMENT 'fs modification time',
+                atime BIGINT COMMENT 'fs access time',
+                ctime BIGINT COMMENT 'fs creation time',
+                INDEX realFileName (realFileName), 
+                FULLTEXT INDEX (realFileName)
+            )""")
+            self.store.execute("""CREATE TABLE IF NOT EXISTS `objects2attributes` (
+                object_id INTEGER REFERENCES objects (id) COMMENT 'reference to object', 
+                attribute_id INTEGER REFERENCES attributes (id) COMMENT 'reference to attribute', 
+                value VARCHAR(2047) COMMENT 'value of that attribute for this object',
+                INDEX value (value),
+                FULLTEXT INDEX (value), 
+                PRIMARY KEY (object_id, attribute_id)
+            )""")
+            self.store.execute("""CREATE TABLE IF NOT EXISTS `jobqueue` (
+                id INTEGER AUTO_INCREMENT PRIMARY KEY,
+                notBefore BIGINT COMMENT 'the job must not be executed before this time',
+                action ENUM(
+                    'reindex-dir',
+                    'update-file',
+                    'assign-file'
+                ) COMMENT 'which job to execute',
+                pathData VARCHAR(2047) COMMENT 'fs object to operate on',
+                additionalData1 VARCHAR(255) COMMENT 'e.g. attribute name',
+                additionalData2 VARCHAR(2047) COMMENT 'e.g. attirbute value'
+            )""")
             self.store.commit()
         
         self.providers = []
@@ -60,14 +53,14 @@ class Library(object):
         self.providers += [provider]
         provider.library = self
         
-    def _handleFile(self, fullPath):
+    def _handleFile(self, fullPath, stat):
         attributes = {}
         try:
             file = open(fullPath, "rb")
         except:
             return
         for provider in self.providers:
-            data = provider.getAttributes(fullPath, file)
+            data = provider.getAttributes(fullPath, file, stat)
             if data is not None:
                 attributes.update(data)
                 break
@@ -83,7 +76,7 @@ class Library(object):
                 statFollowed = os.stat(fullPath)
                 self._handleFSNode(statFollowed, fullPath, recursively, followSymLinks)
         elif stathelper.S_ISREG(stat.st_mode):
-            self._handleFile(fullPath)
+            self._handleFile(fullPath, stat)
             
     
     def scanDirectory(self, path, recursively = True, followSymLinks = False):

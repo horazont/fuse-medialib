@@ -5,6 +5,9 @@ class Object(object):
     __storm_table__ = "objects"
     id = Int(primary = True)
     realFileName = Unicode()
+    mtime = BigInt()
+    atime = BigInt()
+    ctime = BigInt()
     attributes = None
   
     def __init__(self, realFileName):
