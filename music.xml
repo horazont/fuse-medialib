@@ -1,5 +1,22 @@
 <?xml version="1.0" standalone="yes" ?>
-<filter attrib="class" value="audio" leafattrib="generic/title">
+<filter attrib="class" value="image" leafattrib="filename">
+    <folder name="By year">
+        <folders attrib="generic/year">
+            <folders attrib="generic/album">
+                <folders attrib="generic/date" showleafs="true" />
+            </folders>
+        </folders>
+    </folder>
+    <folder name="By album">
+        <folders attrib="generic/album">
+            <folders attrib="generic/author" prefix="Author: ">
+                <leaffolder name="&lt; All &gt;" />
+                <folders attrib="generic/date" prefix="Date: " showleafs="true" />
+            </folders>
+            <folders attrib="generic/date" prefix="Date: " showleafs="true" />
+        </folders>
+    </folder>
+<!--<filter attrib="class" value="audio" leafattrib="generic/title">
     <folder name="Artist">
         <folders attrib="generic/author" prefix="">
             <leaffolder name="&lt; All &gt;" />
@@ -9,4 +26,8 @@
     <folder name="Album">
         <folders attrib="generic/album" showleafs="true" nameformat="%s. %s. %s" nameargs="audio/discno audio/trackno generic/title" />
     </folder>
+    <folders attrib="generic/mime-type/class">
+        <folders attrib="generic/mime-type/type" showleafs="true" />
+    </folders>
+</filter>-->
 </filter>

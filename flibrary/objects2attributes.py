@@ -48,7 +48,7 @@ class AttributeDict(object):
         return assoc
         
     def __getitem__(self, name):
-        attrib = self._getAttributeByName(unicode(name), False)
+        attrib = self._getAttributeByName(name, False)
         if attrib is None:
             return None
         assoc = self._getAssociation(attrib, False)
@@ -58,14 +58,14 @@ class AttributeDict(object):
         #if name in ["obj", "refset"]:
         #    object.__setattr__(self, name, value)
         #    return
-        attrib = self._getAttributeByName(unicode(name), True)
+        attrib = self._getAttributeByName(name, True)
         if attrib is None:
             raise AttributeError("Library attribute \"%s\" does not exist." % name)
         assoc = self._getAssociation(attrib, True)
-        assoc.value = unicode(value)
+        assoc.value = value
     
     def __contains__(self, name):
-        attrib = self._getAttributeByName(unicode(name), False)
+        attrib = self._getAttributeByName(name, False)
         if attrib is None:
             return False
         assoc = self._getAssociation(attrib, False)

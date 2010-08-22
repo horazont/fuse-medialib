@@ -1,12 +1,15 @@
 import tagpy
 from provider import Provider
 from flibrary.attributes import *
-
+from flibrary.foreigndata import safeEncode
 
 class TaglibProvider(Provider):
     def getAttributes(self, fileName, fileObject, fileStat, fileAttributes):
         try:
-            ref = tagpy.FileRef(fileName)
+            useFileName = fileName
+            if isinstance(fileName, unicode):
+                useFileName = fileName.encode("utf-8")
+            ref = tagpy.FileRef(useFileName)
         except ValueError:
             return None
             
@@ -20,31 +23,31 @@ class TaglibProvider(Provider):
         year = tags.year
         
         data = fileAttributes
-        data["class"] = "audio"
+        data[u"class"] = u"audio"
         
         if title is not None:
-            data[ATTR_GENERIC_TITLE] = title
+            data[ATTR_GENERIC_TITLE] = safeEncode(title)
         if album is not None:
-            data[ATTR_GENERIC_ALBUM] = album
+            data[ATTR_GENERIC_ALBUM] = safeEncode(album)
         if artist is not None:
-            data[ATTR_GENERIC_ARTIST] = artist
+            data[ATTR_GENERIC_ARTIST] = safeEncode(artist)
         if genre is not None:
-            data["audio/genre"] = genre
+            data[u"audio/genre"] = safeEncode(genre)
         if track is not None:
-            data["audio/trackno"] = track
+            data[u"audio/trackno"] = safeEncode(track)
         if year is not None:
-            data[ATTR_GENERIC_YEAR] = year
+            data[ATTR_GENERIC_YEAR] = safeEncode(year)
             
         file = ref.file()
         if "xiphComment" in dir(file):
             xiph = file.xiphComment()
             fields = xiph.fieldListMap()
             if "DISCNUMBER" in fields:
-                data["audio/discno"] = fields["DISCNUMBER"][0]
+                data[u"audio/discno"] = safeEncode(fields["DISCNUMBER"][0])
             if "TOTALDISCS" in fields:
-                data["audio/totaldiscs"] = fields["TOTALDISCS"][0]
+                data[u"audio/totaldiscs"] = safeEncode(fields["TOTALDISCS"][0])
             if "TOTALTRACKS" in fields:
-                data["audio/totaltracks"] = fields["TOTALTRACKS"][0]
+                data[u"audio/totaltracks"] = safeEncode(fields["TOTALTRACKS"][0])
             if "RATING:BANSHEE" in fields:
-                data[ATTR_GENERIC_RATING] = float(fields["RATING:BANSHEE"][0])
+                data[ATTR_GENERIC_RATING] = safeEncode(fields["RATING:BANSHEE"][0])
         return data
