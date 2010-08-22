@@ -1,0 +1,27 @@
+
+[indentation]
+indent_width=4
+indent_type=0
+indent_hard_tab_width=8
+detect_indent=false
+indent_mode=2
+
+[project]
+name=fuse-library
+base_path=/home/horazont/Projects/python/fuse-library
+description=
+
+[long line marker]
+long_line_behaviour=1
+long_line_column=72
+
+[files]
+current_page=2
+FILE_NAME_0=73;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/driver.py;0
+FILE_NAME_1=49;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/object.py;0
+FILE_NAME_2=142;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/library.py;0
+FILE_NAME_3=247;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/libtest.py;0
+FILE_NAME_4=34;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/attribute.py;0
+FILE_NAME_5=500;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/objects2attributes.py;0
+FILE_NAME_6=82;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/provider.py;0
+FILE_NAME_7=43;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/taglib.py;0

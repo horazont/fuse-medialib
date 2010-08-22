@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes" ?>
+<filter attrib="class" value="audio">
+    <folder name="Artist">
+        <folders attrib="generic/artist" prefix="">
+            <leaffolder name="&lt; All &gt;" />
+            <folders attrib="generic/album" showleafs="true"/>
+        </folders>
+    </folder>
+    <folder name="Album">
+        <folders attrib="generic/album">
+            <folders attrib="generic/album" showleafs="true"/>
+        </folders>
+    </folder>
+</filter>
