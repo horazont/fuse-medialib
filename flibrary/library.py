@@ -3,8 +3,11 @@ import os
 import stat as stathelper
 from object import Object
 from errors import *
+from attributes import *
 
 class Library(object):
+    toCommitCount = 0
+    
     def __init__(self, databaseURI, initdb = False):
         self.database = create_database(databaseURI)
         self.store = Store(self.database)
@@ -24,8 +27,8 @@ class Library(object):
                 FULLTEXT INDEX (realFileName)
             )""")
             self.store.execute("""CREATE TABLE IF NOT EXISTS `objects2attributes` (
-                object_id INTEGER REFERENCES objects (id) COMMENT 'reference to object', 
-                attribute_id INTEGER REFERENCES attributes (id) COMMENT 'reference to attribute', 
+                object_id INTEGER COMMENT 'reference to object' REFERENCES objects (id), 
+                attribute_id INTEGER COMMENT 'reference to attribute' REFERENCES attributes (id), 
                 value VARCHAR(2047) COMMENT 'value of that attribute for this object',
                 INDEX value (value),
                 FULLTEXT INDEX (value), 
@@ -60,12 +63,14 @@ class Library(object):
         except:
             return
         for provider in self.providers:
-            data = provider.getAttributes(fullPath, file, stat)
-            if data is not None:
-                attributes.update(data)
-                break
-        if len(attributes) > 0:
-            self.updateFile(unicode(fullPath, "utf-8"), attributes)
+            provider.getAttributes(fullPath, file, stat, attributes)
+        genericAttributes = 0
+        if ATTR_CLASS in attributes:
+            genericAttributes += 1
+        if ATTR_MIME_TYPE in attributes:
+            genericAttributes += 1
+        if len(attributes)-genericAttributes > 0:
+            self.updateFile(unicode(fullPath, "utf-8"), attributes, fileStat = stat)
         
     def _handleFSNode(self, stat, fullPath, recursively, followSymLinks):
         if stathelper.S_ISDIR(stat.st_mode):
@@ -86,15 +91,22 @@ class Library(object):
             fullPath = path + fileName
             stat = os.lstat(fullPath)
             self._handleFSNode(stat, fullPath, recursively, followSymLinks)
-        self.store.commit()
+        if self.toCommitCount >= 100:
+            self.store.commit()
             
-    def updateFile(self, realFileName, attributes):
+    def updateFile(self, realFileName, attributes, fileStat = None):
+        if fileStat is None:
+            fileStat = os.stat(realFileName)
         fileObject = self.store.find(Object, Object.realFileName == realFileName)
         if fileObject.count() == 0:
             fileObject = Object(realFileName)
             self.store.add(fileObject)
         else:
             fileObject = fileObject[0]
+        fileObject.mtime = fileStat.st_mtime
+        fileObject.atime = fileStat.st_atime
+        fileObject.ctime = fileStat.st_ctime
         for key, value in attributes.items():
             fileObject[key] = value
+        self.toCommitCount += 1
         

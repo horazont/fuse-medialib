@@ -9,6 +9,7 @@ import errno
 import sys
 
 from flibrary.library import Library
+from flibrary.object import Object
 from flibfs.structure import Structure
 
 fuse.fuse_python_api = (0, 2)
@@ -36,12 +37,17 @@ class LibraryFS(Fuse):
         
         self.lib = Library("mysql://fuselib@localhost/fuselib")
         self.structure = Structure(open("music.xml", "r"), self.lib)
+        
+        self.count = self.lib.store.find(Object).count()
 
         print 'Init complete.'
         sys.stdout.flush()
         
     def _stattuple(self, statmap):
         return statmap["st_mode"], statmap["st_ino"], statmap["st_dev"], statmap["st_nlink"], statmap["st_uid"], statmap["st_gid"], statmap["st_size"], statmap["st_atime"], statmap["st_mtime"], statmap["st_ctime"]
+        
+    def getxattr(self, path):
+        print "*** getxattr", path
 
     def getattr(self, path):
         """
@@ -57,7 +63,6 @@ class LibraryFS(Fuse):
         - st_ctime (platform dependent; time of most recent metadata change on Unix,
                     or the time of creation on Windows).
         """
-
         pathTuple = tuple(path.split("/"));
         try:
             stat = self.structure[pathTuple].getStat()
@@ -150,9 +155,17 @@ class LibraryFS(Fuse):
         return -errno.ENOSYS
 
     def statfs ( self ):
-        print '*** statfs'
-        sys.stdout.flush()
-        return -errno.ENOSYS
+        return fuse.StatVfs(
+            f_type = 0x664C6942,
+            f_bsize = 1048576,
+            f_blocks = 0,
+            f_bfree = 0,
+            f_bavail = 0,
+            f_files = self.count,
+            f_ffree = 0,
+            f_fsid = 0,
+            f_namelen = 2047
+        );
 
     def symlink ( self, targetPath, linkPath ):
         print '*** symlink', targetPath, linkPath

@@ -1,9 +1,9 @@
-from providers import RegExProvider
+from provider import RegExProvider
 from xattr import xattr as XAttr
-from attributes import ATTR_GENERIC_TITLE, ATTR_GENERIC_AUTHOR, ATTR_GENERIC_YEAR, ATTR_GENERIC_RATING
+from flibrary.attributes import *
 
 class XAttrMapper(object):
-    def __init__(dataObj, attrProvider):
+    def __init__(self, dataObj, attrProvider):
         self.data = dataObj
         self.attrs = attrProvider
         
@@ -29,7 +29,8 @@ class XAttrProvider(RegExProvider):
                 'user.author': ATTR_GENERIC_AUTHOR,
                 'user.title': ATTR_GENERIC_TITLE,
                 'user.year': ATTR_GENERIC_YEAR,
-                'user.rating': ATTR_GENERIC_RATING
+                'user.rating': ATTR_GENERIC_RATING,
+                'user.album': ATTR_GENERIC_ALBUM
             })
         except:
             return False
