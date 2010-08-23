@@ -16,12 +16,18 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=2
-FILE_NAME_0=73;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/driver.py;0
-FILE_NAME_1=49;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/object.py;0
-FILE_NAME_2=142;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/library.py;0
-FILE_NAME_3=247;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/libtest.py;0
-FILE_NAME_4=34;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/attribute.py;0
-FILE_NAME_5=500;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/objects2attributes.py;0
-FILE_NAME_6=82;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/provider.py;0
-FILE_NAME_7=43;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/taglib.py;0
+current_page=3
+FILE_NAME_0=895;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/libtest.py;0
+FILE_NAME_1=7283;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/library.py;0
+FILE_NAME_2=1079;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/taglib.py;0
+FILE_NAME_3=514;XML;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/music.xml;0
+FILE_NAME_4=409;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/exif.py;0
+FILE_NAME_5=1541;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/xattrprov.py;0
+FILE_NAME_6=1210;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/provider.py;0
+FILE_NAME_7=540;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/attributes.py;0
+FILE_NAME_8=177;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/directory.py;0
+FILE_NAME_9=196;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/playground.py;0
+FILE_NAME_10=196;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/object.py;0
+FILE_NAME_11=1198;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/objects2attributes.py;0
+FILE_NAME_12=875;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/mimetype.py;0
+FILE_NAME_13=275;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/foreigndata.py;0
