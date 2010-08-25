@@ -18,47 +18,109 @@ class Library(object):
         
         if initdb:
             self.store.execute("""CREATE TABLE IF NOT EXISTS `attributes` (
-                id INTEGER AUTO_INCREMENT PRIMARY KEY, 
-                name VARCHAR(255) NOT NULL UNIQUE COMMENT 'attribute name'
+                id 
+                    INTEGER AUTO_INCREMENT 
+                    PRIMARY KEY, 
+                name 
+                    VARCHAR(255) NOT NULL 
+                    UNIQUE 
+                    COMMENT 'attribute name'
             ) COLLATE = utf8_bin""")
             self.store.execute("""CREATE TABLE IF NOT EXISTS `objects` (
-                id INTEGER AUTO_INCREMENT PRIMARY KEY, 
-                realFileName VARCHAR(2047) NOT NULL COMMENT 'where to find that on the file system', 
-                mtime BIGINT NOT NULL DEFAULT 0 COMMENT 'fs modification time',
-                ctime BIGINT NOT NULL DEFAULT 0 COMMENT 'fs creation time',
-                lastScan BIGINT NOT NULL DEFAULT 0 COMMENT 'timestamp of last scan',
+                id 
+                    INTEGER AUTO_INCREMENT 
+                    PRIMARY KEY, 
+                realFileName 
+                    VARCHAR(2047) NOT NULL 
+                    COMMENT 'where to find that on the file system', 
+                mtime 
+                    BIGINT NOT NULL 
+                    DEFAULT 0 
+                    COMMENT 'fs modification time',
+                ctime 
+                    BIGINT NOT NULL 
+                    DEFAULT 0 
+                    COMMENT 'fs creation time',
+                lastScan 
+                    BIGINT NOT NULL 
+                    DEFAULT 0 
+                    COMMENT 'timestamp of last scan',
                 INDEX realFileName (realFileName), 
                 FULLTEXT INDEX (realFileName)
             ) COLLATE = utf8_bin""")
             self.store.execute("""CREATE TABLE IF NOT EXISTS `objects2attributes` (
-                object_id INTEGER COMMENT 'reference to object' REFERENCES objects (id), 
-                attribute_id INTEGER COMMENT 'reference to attribute' REFERENCES attributes (id), 
-                value VARCHAR(2047) COMMENT 'value of that attribute for this object',
-                INDEX value (value),
-                FULLTEXT INDEX (value), 
-                PRIMARY KEY (object_id, attribute_id)
+                object_id 
+                    INTEGER 
+                    COMMENT 'reference to object' 
+                    REFERENCES objects (id), 
+                attribute_id 
+                    INTEGER 
+                    COMMENT 'reference to attribute' 
+                    REFERENCES attributes (id), 
+                value 
+                    VARCHAR(2047) 
+                    COMMENT 'value of that attribute for this object',
+                INDEX 
+                    value (value),
+                FULLTEXT INDEX 
+                    (value), 
+                PRIMARY KEY 
+                    (object_id, attribute_id)
             ) COLLATE = utf8_bin""")
             self.store.execute("""CREATE TABLE IF NOT EXISTS `jobqueue` (
-                id INTEGER AUTO_INCREMENT PRIMARY KEY,
-                notBefore BIGINT COMMENT 'the job must not be executed before this time',
-                action ENUM(
-                    'reindex-dir',
-                    'update-file',
-                    'assign-file'
-                ) COMMENT 'which job to execute',
-                pathData VARCHAR(2047) COMMENT 'fs object to operate on',
-                additionalData1 VARCHAR(255) COMMENT 'e.g. attribute name',
-                additionalData2 VARCHAR(2047) COMMENT 'e.g. attirbute value'
+                id 
+                    INTEGER AUTO_INCREMENT 
+                    PRIMARY KEY,
+                notBefore 
+                    BIGINT 
+                    COMMENT 'the job must not be executed before this time',
+                action 
+                    ENUM(
+                        'reindex-dir',
+                        'update-file',
+                        'assign-file',
+                        'rebuild-dir'
+                    ) 
+                    COMMENT 'which job to execute',
+                pathData 
+                    VARCHAR(2047) NOT NULL
+                    COMMENT 'fs object to operate on',
+                additionalData1 
+                    VARCHAR(255) 
+                    COMMENT 'e.g. attribute name',
+                additionalData2 
+                    VARCHAR(2047) 
+                    COMMENT 'e.g. attirbute value'
             ) COLLATE = utf8_bin""")
             self.store.execute("""CREATE TABLE IF NOT EXISTS `directories` (
-                id INTEGER AUTO_INCREMENT PRIMARY KEY,
-                path VARCHAR(2047) NOT NULL COMMENT 'path to the directory',
-                mtime BIGINT NOT NULL DEFAULT 0 COMMENT 'fs modification time',
-                ctime BIGINT NOT NULL DEFAULT 0 COMMENT 'fs creation time',
-                lastScan BIGINT NOT NULL DEFAULT 0 COMMENT 'timestamp of last full scan',
-                followSymLinks BOOL NOT NULL DEFAULT FALSE COMMENT 'will follow symlinks on autoscan',
-                recursively BOOL NOT NULL DEFAULT TRUE COMMENT 'recurse into subdirectories on autoscan',
-                INDEX path (path)
+                id 
+                    INTEGER AUTO_INCREMENT 
+                    PRIMARY KEY,
+                path 
+                    VARCHAR(2047) NOT NULL 
+                    COMMENT 'path to the directory',
+                mtime 
+                    BIGINT NOT NULL 
+                    DEFAULT 0 
+                    COMMENT 'fs modification time',
+                ctime 
+                    BIGINT NOT NULL 
+                    DEFAULT 0 
+                    COMMENT 'fs creation time',
+                lastScan 
+                    BIGINT NOT NULL 
+                    DEFAULT 0 
+                    COMMENT 'timestamp of last full scan',
+                followSymLinks 
+                    BOOL NOT NULL 
+                    DEFAULT FALSE 
+                    COMMENT 'will follow symlinks on autoscan',
+                recursively 
+                    BOOL NOT NULL 
+                    DEFAULT TRUE 
+                    COMMENT 'recurse into subdirectories on autoscan',
+                INDEX 
+                    path (path)
             ) COLLATE = utf8_bin""")
             self.store.commit()
         
