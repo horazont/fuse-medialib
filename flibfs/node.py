@@ -5,7 +5,7 @@ from flibfs.errors import *
 from flibrary.object import Object
 import re
 from flibfs.formatting import buildFormattingChain, resolveFormatting
-from fuse import Stat
+from fuse import Stat, Direntry
 import os
 import stat
 
@@ -302,16 +302,22 @@ class FSNode(object):
         self.wasRebuilt = True
         
     def stat(self):
-        statobj = Stat(st_ino = self.id, st_uid = os.getuid(), st_gid = os.getgid(), st_size = self.size, st_atime = self.atime, st_mtime = self.mtime, st_ctime = self.ctime)
+        statobj = Stat(st_ino = self.id, st_uid = os.getuid(), st_gid = os.getgid(), st_size = self.size, st_atime = self.atime, st_mtime = self.mtime, st_ctime = self.ctime, st_nlink = 0)
         if self.kind == FSNODE_FOLDER:
             statobj.st_mode = STAT_UMASK | stat.S_IFDIR
         else:
             statobj.st_mode = STAT_UMASK | stat.S_IFLNK
-        print dir(statobj)
         return statobj
     
     def readlink(self):
         return Store.of(self).get(Object, self.relative).realFileName
+    
+    def getDirentry(self):
+        if self.kind == FSNODE_FOLDER:
+            mode = stat.S_IFDIR
+        else:
+            mode = stat.s_IFLNK
+        return Direntry(self.displayName, type = mode, ino = self.id)
     
 class FSNodeFilter(object):
     __storm_table__ = "fsnodefilter"

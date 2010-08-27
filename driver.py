@@ -11,7 +11,6 @@ import sys
 from flibfs.structure import FSStructure
 from flibfs.node import FSNode
 from storm.locals import *
-from fuse import Direntry
 
 fuse.fuse_python_api = (0, 2)
 
@@ -64,7 +63,6 @@ class LibraryFS(Fuse):
         """
         
         node = self.fs.getNode(unicode(path, "utf-8")[1:])
-        print node.id
         if node is None:
             return -errno.ENOENT
         else:
@@ -86,11 +84,16 @@ class LibraryFS(Fuse):
         except AttributeError:
             return -errno.ENOENT"""
         node = self.fs.getNode(unicode(path, "utf-8")[1:])
+        print node
         if node is None:
             return
         for child in Store.of(node).find(FSNode, FSNode.parent_id == node.id, FSNode.hidden == False):
-            print child.displayName
-            yield Direntry(child.displayName)
+            dirent = child.getDirentry()
+            print dirent.name
+            print dirent.ino
+            print dirent.type
+            print dirent.offset
+            yield dirent
 
     def mythread ( self ):
         pass
