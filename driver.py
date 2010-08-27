@@ -64,6 +64,7 @@ class LibraryFS(Fuse):
         """
         
         node = self.fs.getNode(unicode(path, "utf-8")[1:])
+        print node.id
         if node is None:
             return -errno.ENOENT
         else:
@@ -86,9 +87,10 @@ class LibraryFS(Fuse):
             return -errno.ENOENT"""
         node = self.fs.getNode(unicode(path, "utf-8")[1:])
         if node is None:
-            return -errno.ENOENT
-        else:
-            return [Direntry(child.displayName) for child in Store.of(node).find(FSNode, FSNode.parent_id == node.id, FSNode.hidden == False)]
+            return
+        for child in Store.of(node).find(FSNode, FSNode.parent_id == node.id, FSNode.hidden == False):
+            print child.displayName
+            yield Direntry(child.displayName)
 
     def mythread ( self ):
         pass

@@ -304,9 +304,10 @@ class FSNode(object):
     def stat(self):
         statobj = Stat(st_ino = self.id, st_uid = os.getuid(), st_gid = os.getgid(), st_size = self.size, st_atime = self.atime, st_mtime = self.mtime, st_ctime = self.ctime)
         if self.kind == FSNODE_FOLDER:
-            statobj.mode = STAT_UMASK | stat.S_IFDIR
+            statobj.st_mode = STAT_UMASK | stat.S_IFDIR
         else:
-            statobj.mode = STAT_UMASK | stat.S_IFLNK
+            statobj.st_mode = STAT_UMASK | stat.S_IFLNK
+        print dir(statobj)
         return statobj
     
     def readlink(self):
