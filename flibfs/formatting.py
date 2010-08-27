@@ -44,7 +44,7 @@ def buildFormattingChain(s):
 
 def resolveFormatting(fmtChain, obj):
     skip = 0
-    result = ""
+    result = u""
     for node in fmtChain:
         if skip > 0:
             skip -= 1

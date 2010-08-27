@@ -69,17 +69,20 @@ class FSFilter(object):
     kind = Int()
     value = Unicode()
     
+    def _escape(self, s):
+        return s.replace(u"'", u"\\'").replace(u'"', u'\\"')
+    
     def getStormFilter(self):
         if self.kind == FSFILTER_EXACT:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value == re.escape(self.value)]
+            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value == self.value]
         elif self.kind == FSFILTER_STARTS_WITH:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(re.escape(self.value)+'%')]
+            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(self.value+u'%')]
         elif self.kind == FSFILTER_ENDS_WITH:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like('%'+re.escape(self.value))]
+            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(u'%'+self.value)]
         elif self.kind == FSFILTER_CONTAINS:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like('%'+re.escape(self.value)+'%')]
+            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(u'%'+self.value+u'%')]
         elif self.kind == FSFILTER_LIKE:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(re.escape(self.value).replace('\%', '%'))]
+            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(self.value)]
         elif self.kind == FSFILTER_GENERATOR:
             return []
         else:
@@ -212,9 +215,9 @@ class FSNode(object):
             store = Store.of(self)
             for filter in filters:
                 if previousSelection is not None:
-                    filters = [Object.id.is_in(previousSelection.values(Object.id)), Object.id == AssociatedAttribute.object_id, filter]
+                    filters = [Object.id.is_in(previousSelection.values(Object.id)), Object.id == AssociatedAttribute.object_id] + filter
                 else:
-                    filters = [Object.id == AssociatedAttribute.object_id, filter]
+                    filters = [Object.id == AssociatedAttribute.object_id] + filter
                 previousSelection = store.find(Object, *filters)
             return previousSelection
         else:
@@ -310,14 +313,14 @@ class FSNode(object):
         return statobj
     
     def readlink(self):
-        return Store.of(self).get(Object, self.relative).realFileName
+        return Store.of(self).get(Object, self.relative).realFileName.encode("utf-8")
     
     def getDirentry(self):
         if self.kind == FSNODE_FOLDER:
             mode = stat.S_IFDIR
         else:
-            mode = stat.s_IFLNK
-        return Direntry(self.displayName, type = mode, ino = self.id)
+            mode = stat.S_IFLNK
+        return Direntry(self.displayName.encode("utf-8"), type = mode, ino = self.id)
     
 class FSNodeFilter(object):
     __storm_table__ = "fsnodefilter"

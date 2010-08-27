@@ -37,15 +37,20 @@ class LibraryFS(Fuse):
         
         self.structure = FSStructure("mysql://fuselib@localhost/fuselib")
         self.fs = self.structure.getFilesystem(u"test")
+        
+        self.count = self.structure.store.find(FSNode).count()
 
         print 'Init complete.'
         sys.stdout.flush()
         
     def _stattuple(self, statmap):
         return statmap["st_mode"], statmap["st_ino"], statmap["st_dev"], statmap["st_nlink"], statmap["st_uid"], statmap["st_gid"], statmap["st_size"], statmap["st_atime"], statmap["st_mtime"], statmap["st_ctime"]
-        
-    def getxattr(self, path):
-        print "*** getxattr", path
+    
+    def lsxattr(self, path, *args):
+        print "*** lsxattr", path, args
+    
+    def getxattr(self, path, more1, more2):
+        print "*** getxattr", path, more1, more2
 
     def getattr(self, path):
         """
@@ -61,8 +66,9 @@ class LibraryFS(Fuse):
         - st_ctime (platform dependent; time of most recent metadata change on Unix,
                     or the time of creation on Windows).
         """
-        
-        node = self.fs.getNode(unicode(path, "utf-8")[1:])
+        if path == "/":
+            path = ""
+        node = self.fs.getNode(unicode(path, "utf-8"))
         if node is None:
             return -errno.ENOENT
         else:
@@ -83,17 +89,14 @@ class LibraryFS(Fuse):
                 return dirlist
         except AttributeError:
             return -errno.ENOENT"""
-        node = self.fs.getNode(unicode(path, "utf-8")[1:])
-        print node
+        if path == "/":
+            path = ""
+        node = self.fs.getNode(unicode(path, "utf-8"))
         if node is None:
             return
         for child in Store.of(node).find(FSNode, FSNode.parent_id == node.id, FSNode.hidden == False):
-            dirent = child.getDirentry()
-            print dirent.name
-            print dirent.ino
-            print dirent.type
-            print dirent.offset
-            yield dirent
+            print child.displayName
+            yield child.getDirentry()
 
     def mythread ( self ):
         pass
@@ -139,11 +142,13 @@ class LibraryFS(Fuse):
         return -errno.ENOSYS
 
     def readlink ( self, path ):
-        pathTuple = tuple(unicode(path, "utf-8").split("/"));
-        try:
-            return self.structure[pathTuple].readLink().encode("utf-8")
-        except AttributeError:
+        if path == "/":
+            path = ""
+        node = self.fs.getNode(unicode(path, "utf-8"))
+        if node is None:
             return -errno.ENOENT
+        else:
+            return node.readlink()
 
     def release ( self, path, flags ):
         print '*** release', path, flags
@@ -169,7 +174,7 @@ class LibraryFS(Fuse):
             f_bavail = 0,
             f_files = self.count,
             f_ffree = 0,
-            f_fsid = 0,
+            f_fsid = self.fs.id,
             f_namelen = 2047
         );
 
