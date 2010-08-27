@@ -18,7 +18,7 @@ class FormattingNodeStatic(FormattingNode):
         
 class FormattingNodeAttribute(FormattingNode):
     def __init__(self, attribName, **kwargs):
-        super(FormattingNodeStatic, self).__init__(**kwargs)
+        super(FormattingNodeAttribute, self).__init__(**kwargs)
         self.attribName = attribName
         
     def resolve(self, obj):
@@ -35,7 +35,11 @@ def buildFormattingChain(s):
         start = match.start()
         if start <> lastPos:
             result += [FormattingNodeStatic(s[lastPos:start])]
-        result += [FormattingNodeAttribute(match.group(1), len(match.group(2)))]
+        questionMarks = match.group(2)
+        skipCount = 0
+        if questionMarks is not None:
+            skipCount = len(match.group(2))
+        result += [FormattingNodeAttribute(match.group(1), failureSkip = skipCount)]
     return result
 
 def resolveFormatting(fmtChain, obj):

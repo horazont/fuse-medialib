@@ -81,7 +81,7 @@ class FSStructure(object):
                     REFERENCES attributes (id),
                 kind 
                     INTEGER NOT NULL
-                    COMMENT '0 = exact match; 1 = starts-with; 2 = ends-with; 3 = contains; 4 = like; 5 = regex',
+                    COMMENT '0 = exact match; 1 = starts-with; 2 = ends-with; 3 = contains; 4 = like; 5 = regex; 6 = none (generator)',
                 value 
                     VARCHAR(255) NOT NULL 
                     COMMENT 'value to match against'
@@ -120,7 +120,7 @@ class FSStructure(object):
     def newFilesystem(self, name):
         if self.store.find(Filesystem, Filesystem.refName == name).any() is not None:
             raise FLibFSValidityError("There is already a filesystem with that name.")
-        obj = Filesystem()
+        obj = Filesystem(self.store)
         obj.refName = name
         self.store.add(obj)
         return obj

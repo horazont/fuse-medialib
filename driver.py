@@ -8,9 +8,10 @@ import os
 import errno
 import sys
 
-from flibrary.library import Library
-from flibrary.object import Object
-from flibfs.structure import Structure
+from flibfs.structure import FSStructure
+from flibfs.node import FSNode
+from storm.locals import *
+from fuse import Direntry
 
 fuse.fuse_python_api = (0, 2)
 
@@ -35,10 +36,8 @@ class LibraryFS(Fuse):
         Fuse.__init__(self, *args, **kw)
         self.parse()
         
-        self.lib = Library("mysql://fuselib@localhost/fuselib")
-        self.structure = Structure(open("music.xml", "r"), self.lib)
-        
-        self.count = self.lib.store.find(Object).count()
+        self.structure = FSStructure("mysql://fuselib@localhost/fuselib")
+        self.fs = self.structure.getFilesystem(u"test")
 
         print 'Init complete.'
         sys.stdout.flush()
@@ -63,12 +62,12 @@ class LibraryFS(Fuse):
         - st_ctime (platform dependent; time of most recent metadata change on Unix,
                     or the time of creation on Windows).
         """
-        pathTuple = tuple(path.split("/"));
-        try:
-            stat = self.structure[pathTuple].getStat()
-            return StatInfo(stat)
-        except AttributeError:
+        
+        node = self.fs.getNode(unicode(path, "utf-8")[1:])
+        if node is None:
             return -errno.ENOENT
+        else:
+            return node.stat()
         
 
     def readdir(self, path, offset):
@@ -85,9 +84,11 @@ class LibraryFS(Fuse):
                 return dirlist
         except AttributeError:
             return -errno.ENOENT"""
-        pathTuple = tuple(unicode(path, "utf-8").split("/"));
-        for direntry in self.structure[pathTuple].getDir():
-            yield direntry
+        node = self.fs.getNode(unicode(path, "utf-8")[1:])
+        if node is None:
+            return -errno.ENOENT
+        else:
+            return [Direntry(child.displayName) for child in Store.of(node).find(FSNode, FSNode.parent_id == node.id, FSNode.hidden == False)]
 
     def mythread ( self ):
         pass
