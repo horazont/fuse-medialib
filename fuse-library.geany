@@ -16,7 +16,15 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=1
-FILE_NAME_0=315;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibfs/node.py;0
-FILE_NAME_1=923;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibfs/structure.py;0
-FILE_NAME_2=0;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/library.py;0
+current_page=0
+FILE_NAME_0=17813;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibfs/node.py;0
+FILE_NAME_1=3136;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibfs/structure.py;0
+FILE_NAME_2=8868;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/library.py;0
+FILE_NAME_3=3341;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/driver.py;0
+FILE_NAME_4=773;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibfs/formatting.py;0
+FILE_NAME_5=318;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/fsstructuretest.py;0
+FILE_NAME_6=0;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/provider.py;0
+FILE_NAME_7=1390;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/providers/taglib.py;0
+FILE_NAME_8=717;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/libtest.py;0
+FILE_NAME_9=395;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/attributes.py;0
+FILE_NAME_10=2543;Python;0;16;0;1;1;/home/horazont/Projects/python/fuse-library/flibrary/objects2attributes.py;0

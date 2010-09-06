@@ -37,9 +37,11 @@ class Filesystem(object):
     
     def __storm_loaded__(self):
         self.store = Store.of(self)
+        self.selectiveUpdate = None
         
     def __init__(self, store):
         self.store = store
+        self.selectiveUpdate = None
     
     def getRootDir(self):
         store = Store.of(self)
@@ -60,44 +62,71 @@ class Filesystem(object):
     def getNode(self, path):
         node = self.store.find(FSNode, FSNode.fullPath == path).any()
         return node
+        
+    def setupSelectiveUpdate(self, resultSet):
+        self.selectiveUpdate = resultSet
+        self.getRootDir().clearSelectionCache()
+        
+    def selectiveRebuild(self):
+        if self.selectiveUpdate is None:
+            raise FLibFSError("Attempt to perform a selective rebuild without a selection.")
+        self.store.find(FSNode, FSNode.kind == FSNODE_FILE, FSNode.fs_id == self.id, FSNode.relative.is_in(self.selectiveUpdate.values(Object.id))).remove()
+        self.getRootDir().softRebuild()
     
 class FSFilter(object):
     __storm_table__ = "fsfilter"
     id = Int(primary = True)
-    attribute_id = Int()
-    attribute = Reference(attribute_id, Attribute.id)
+    attributeName = Unicode()
     kind = Int()
     value = Unicode()
     
     def _escape(self, s):
         return s.replace(u"'", u"\\'").replace(u'"', u'\\"')
+        
+    def __init__(self, attributeName = None, kind = None, value = None):
+        if attributeName is not None:
+            self.attributeName = attributeName
+        if kind is not None:
+            self.kind = kind
+        self.value = value
+        
+    def getAttributeId(self):
+        return Store.of(self).find(Attribute, Attribute.name == self.attributeName).one().id
     
     def getStormFilter(self):
         if self.kind == FSFILTER_EXACT:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value == self.value]
+            return [Attribute.name == self.attributeName, AssociatedAttribute.attribute_id == Attribute.id, AssociatedAttribute.value == self.value]
         elif self.kind == FSFILTER_STARTS_WITH:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(self.value+u'%')]
+            return [Attribute.name == self.attributeName, AssociatedAttribute.attribute_id == Attribute.id, AssociatedAttribute.value.like(self.value+u'%')]
         elif self.kind == FSFILTER_ENDS_WITH:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(u'%'+self.value)]
+            return [Attribute.name == self.attributeName, AssociatedAttribute.attribute_id == Attribute.id, AssociatedAttribute.value.like(u'%'+self.value)]
         elif self.kind == FSFILTER_CONTAINS:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(u'%'+self.value+u'%')]
+            return [Attribute.name == self.attributeName, AssociatedAttribute.attribute_id == Attribute.id, AssociatedAttribute.value.like(u'%'+self.value+u'%')]
         elif self.kind == FSFILTER_LIKE:
-            return [AssociatedAttribute.attribute_id == self.attribute_id, AssociatedAttribute.value.like(self.value)]
+            return [Attribute.name == self.attributeName, AssociatedAttribute.attribute_id == Attribute.id, AssociatedAttribute.value.like(self.value)]
         elif self.kind == FSFILTER_GENERATOR:
             return []
         else:
             raise FLibFSError("Invalid filter kind")
             
     @staticmethod
-    def findFilter(store, attribute_id, kind, value):
-        filter = store.find(FSFilter, FSFilter.attribute_id == attribute_id, FSFilter.kind == kind, FSFilter.value == value).any()
+    def findFilter(store, attributeName, kind, value):
+        filter = store.find(FSFilter, FSFilter.attributeName == attributeName, FSFilter.kind == kind, FSFilter.value == value).any()
         if filter is None:
             filter = FSFilter()
-            filter.attribute_id = attribute_id
+            filter.attributeName = attributeName
             filter.kind = kind
             filter.value = value
             store.add(filter)
         return filter
+    
+class FSNodeAttribute(object):
+    __storm_table__ = "fsnodeattribute"
+    __storm_primary__ = "attribute_id", "node_id"
+    
+    attribute_id = Int()
+    node_id = Int()
+    value = Unicode()
 
 class FSNode(object):
     __storm_table__ = "fsnode"
@@ -129,13 +158,16 @@ class FSNode(object):
     
     def hasNode(self, displayName):
         return Store.of(self).find(FSNode, FSNode.parent_id == self.id, FSNode.displayName == displayName, FSNode.kind != FSNODE_GENERATOR).count() != 0
+        
+    def getChild(self, displayName):
+        return Store.of(self).find(FSNode, FSNode.parent_id == self.id, FSNode.displayName == displayName, FSNode.kind != FSNODE_GENERATOR).any()
     
     def createDirectory(self, displayName, asGenerator = False, hidden = False, showLeafs = False, size = None, atime = None, mtime = None, ctime = None, relative = None):
         if not asGenerator and (len(displayName) == 0 or self.hasNode(displayName)):
             raise FLibFSValidityError("Duplicate or empty display name (%s)." % displayName)
         obj = FSNode()
         obj.fs = self.fs
-        obj.parent_id = self.id
+        obj.parent = self
         obj.displayName = displayName
         obj.fullPath = self.fullPath + "/" + displayName
         if asGenerator:
@@ -175,7 +207,8 @@ class FSNode(object):
         children = list(self.children) # store it as it will change during this operation
         for child in children:
             child.delete()
-        self.filters.clear()
+        store.find(FSNodeFilter, FSNodeFilter.node_id == self.id).remove()
+        store.find(FSNodeAttribute, FSNodeAttribute.node_id == self.id).remove()
         store.remove(self)
         
     def cloneTo(self, newParent):
@@ -186,6 +219,11 @@ class FSNode(object):
             child.cloneTo(newNode)
         for filter in self.filters:
             newNode.filters.add(filter)
+        for attrib in self.attributes:
+            newAttrib = FSNodeAttribute()
+            newAttrib.attribute_id = attrib.attribute_id
+            newAttrib.value = attrib.value
+            newNode.attributes.add(newAttrib)
             
     def inheritingAttribute(self, attribute_id):
         for attrib in self.attributes:
@@ -205,12 +243,22 @@ class FSNode(object):
             filters += [filter.getStormFilter()]
         return filters
         
+    def clearSelectionCache(self):
+        self._cachedSelection = None
+        for child in self.children:
+            child.clearSelectionCache()
+        
+    def parentSelection(self):
+        if self.parent is not None:
+            return self.parent.cachedSelection()
+        elif self.fs.selectiveUpdate is not None:
+            return self.fs.selectiveUpdate
+        else:
+            return None
+        
     def cachedSelection(self):
         if self._cachedSelection is None:
-            if self.parent is not None:
-                previousSelection = self.parent.cachedSelection()
-            else:
-                previousSelection = None
+            previousSelection = self.parentSelection()
             filters = self.getFilters()
             store = Store.of(self)
             for filter in filters:
@@ -223,8 +271,36 @@ class FSNode(object):
         else:
             return self._cachedSelection
             
-    def invalidateSelectionCache(self):
-        self._cachedSelection = None
+    def parentCustomSelection(self, inputSet):
+        if self.parent is not None:
+            return self.parent.customSelection(inputSet)
+        else:
+            return inputSet
+            
+    def customSelection(self, inputSet):
+        previousSelection = self.parentCustomSelection(inputSet)
+        filters = self.getFilters()
+        store = Store.of(self)
+        for filter in filters:
+            if previousSelection is not None:
+                filters = [Object.id.is_in(previousSelection.values(Object.id)), Object.id == AssociatedAttribute.object_id] + filter
+            else:
+                filters = [Object.id == AssociatedAttribute.object_id] + filter
+            previousSelection = store.find(Object *filters)
+        return previousSelection
+        
+    def addLeafs(self):
+        selection = self.cachedSelection()
+        
+        formattingChain = buildFormattingChain(self.inheritingAttribute(FSNODE_ATTRIB_DISPLAY_NAME_FORMAT))
+        for obj in selection:
+            self.createFile(obj, resolveFormatting(formattingChain, obj))
+            
+    def getFileNode(self, fileObjId):
+        return Store.of(self).find(FSNode, FSNode.parent_id == self.id, FSNode.kind == FSNODE_FILE, FSNode.relative == fileObjId).any()
+        
+    def hasFileNode(self, fileObjId):
+        return not Store.of(self).find(FSNode, FSNode.parent_id == self.id, FSNode.kind == FSNODE_FILE, FSNode.relative == fileObjId).is_empty()
         
     def _buildAsFolder(self):
         store = Store.of(self)
@@ -235,12 +311,34 @@ class FSNode(object):
             child.rebuild()
         if not self.showLeafs:
             return
+            
+        self.addLeafs()
         
+    def _softBuildAsFolder(self):
+        store = Store.of(self)
+        for generator in store.find(FSNode, FSNode.parent_id == self.id, FSNode.kind == FSNODE_GENERATOR):
+            generator.softRebuild()
+        for nonGenerator in store.find(FSNode, FSNode.parent_id == self.id, FSNode.kind != FSNODE_GENERATOR):
+            nonGenerator.softRebuild()
+        if not self.showLeafs:
+            return
         selection = self.cachedSelection()
-        
         formattingChain = buildFormattingChain(self.inheritingAttribute(FSNODE_ATTRIB_DISPLAY_NAME_FORMAT))
-        for obj in selection:
-            self.createFile(obj, resolveFormatting(formattingChain, obj))
+        for libObj in selection:
+            if not self.hasFileNode(libObj.id):
+                self.createFile(libObj, resolveFormatting(formattingChain, libObj))
+        
+        # remove all "orphans"
+        store.find(FSNode, FSNode.parent_id == self.id, FSNode.kind == FSNODE_FILE, Not(FSNode.relative.is_in(store.find(Object.id).values(Object.id)))).remove()
+        
+        existingSelection = store.find(Object, Object.id == FSNode.relative, FSNode.parent_id == self.id, FSNode.kind == FSNODE_FILE)
+        filteredSelection = self.customSelection(existingSelection)
+        if filteredSelection.count() < existingSelection.count():
+            existing = set(existingSelection.values(Object.id))
+            filtered = set(filteredSelection.values(Object.id))
+            toDelete = existing - filtered
+            
+            store.find(FSNode, FSNode.parent_id == self.id, FSNode.kind == FSNODE_FILE, FSNode.relative.is_in(toDelete)).remove()
     
     def _buildAsGenerator(self):
         store = Store.of(self)
@@ -248,13 +346,11 @@ class FSNode(object):
         for generated in generatedList:
             generated.delete()
         if self.filters.count() != 1:
-            raise FLibFSValidityError("A generator must have exactly one filter (%d found)" % self.filters.count())
-        attribId = self.filters.any().attribute_id
+            raise FLibFSValidityError("A generator must have exactly one filter (%d found for generator %d)" % (self.filters.count(), self.id))
+        filter = self.filters.any()
+        attribId = filter.getAttributeId()
         
-        if self.parent is not None:
-            selection = self.parent.cachedSelection()
-        else:
-            selection = None
+        selection = self.cachedSelection()
         if selection is None:
             filters = [AssociatedAttribute.attribute_id == attribId]
         else:
@@ -268,7 +364,44 @@ class FSNode(object):
             newNode = parentNode.createDirectory(self.displayName + name, asGenerator = False, hidden = False, showLeafs = self.showLeafs, relative = self.id)
             for child in self.children:
                 child.cloneTo(newNode)
-            newNode.filters.add(FSFilter.findFilter(store, attribId, FSFILTER_EXACT, attribute.value))
+            newNode.filters.add(FSFilter.findFilter(store, filter.attributeName, FSFILTER_EXACT, attribute.value))
+            for attrib in self.attributes:
+                newAttrib = FSNodeAttribute()
+                newAttrib.attribute_id = attrib.attribute_id
+                newAttrib.value = attrib.value
+                newNode.attributes.add(newAttrib)
+            
+    def _softBuildAsGenerator(self):
+        store = Store.of(self)
+        if self.filters.count() != 1:
+            raise FLibFSValidityError("A generator must have exactly one filter (%d found for generator %d)" % (self.filters.count(), self.id))
+        attribId = self.filters.any().attribute_id
+        
+        selection = self.cachedSelection()
+        if selection is None:
+            filters = [AssociatedAttribute.attribute_id == attribId]
+        else:
+            filters = [AssociatedAttribute.object_id.is_in(selection.values(Object.id)), AssociatedAttribute.attribute_id == attribId]
+        attributes = store.find(AssociatedAttribute, *filters).group_by(AssociatedAttribute.value)
+        parentNode = self.parent
+        rebuilt = []
+        for attribute in attributes:
+            name = attribute.value
+            if len(name) == 0:
+                name = UNTAGGED_NAME
+            childNode = parentNode.getChild(name)
+            if childNode is None:
+                childNode = parentNode.createDirectory(self.displayName + name, asGenerator = False, hidden = False, showLeafs = self.showLeafs, relative = self.id)
+                for child in self.children:
+                    child.cloneTo(childNode)
+                childNode.filters.add(FSFilter.findFilter(store, attribId, FSFILTER_EXACT, attribute.value))
+            childNode.softRebuild()
+            rebuilt += [childNode.id]
+        
+        toCheck = store.find(FSNode, FSNode.kind == FSNODE_FOLDER, FSNode.relative == self.id, Not(FSNode.id.is_in(rebuilt)))
+        for node in toCheck:
+            if node.cachedSelection().count() == 0:
+                node.delete()
         
     def resetRebuilt(self):
         self.wasRebuilt = False
@@ -277,7 +410,7 @@ class FSNode(object):
             
     def clean(self):
         if self.kind == FSNODE_FILE:
-            delete(self)
+            self.delete()
         elif self.kind == FSNODE_FOLDER:
             for child in self.children:
                 child.clean()
@@ -288,7 +421,7 @@ class FSNode(object):
                 generated.delete()
         else:
             raise FLibFSError("Unknown kind")
-        
+        self.wasRebuilt = False
     
     def rebuild(self):
         if self.wasRebuilt:
@@ -303,6 +436,16 @@ class FSNode(object):
         else:
             raise FLibFSError("Unknown kind")
         self.wasRebuilt = True
+        
+    def softRebuild(self):
+        if self.kind == FSNODE_FILE:
+            return
+        if self.kind == FSNODE_FOLDER:
+            self._softBuildAsFolder()
+        elif self.kind == FSNODE_GENERATOR:
+            self._softBuildAsGenerator()
+        else:
+            raise FLibFSError("Unknown kind")
         
     def stat(self):
         statobj = Stat(st_ino = self.id, st_uid = os.getuid(), st_gid = os.getgid(), st_size = self.size, st_atime = self.atime, st_mtime = self.mtime, st_ctime = self.ctime, st_nlink = 0)
@@ -329,15 +472,7 @@ class FSNodeFilter(object):
     node_id = Int()
     filter_id = Int()
     
-class FSNodeAttribute(object):
-    __storm_table__ = "fsnodeattribute"
-    __storm_primary__ = "attribute_id", "node_id"
-    
-    attribute_id = Int()
-    node_id = Int()
-    node = Reference(node_id, FSNode.id)
-    value = Unicode()
-    
+FSNodeAttribute.node = Reference(FSNodeAttribute.node_id, FSNode.id)
     
 FSNode.filters = ReferenceSet(  FSNode.id,
                                 FSNodeFilter.node_id,

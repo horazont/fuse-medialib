@@ -6,9 +6,8 @@ from object import Object
 from directory import Directory
 from errors import *
 from attributes import *
+from objects2attributes import *
 import time
-
-UPDATE_INTERVAL = 86400
 
 class Library(object):
     
@@ -185,8 +184,10 @@ class Library(object):
     
     def _updateFile(self, fileObj, fileStat):
         attributes, count = self._getAttributesForFile(fileObj.realFileName, fileStat)
+        # force deletion of all attributes
+        self.store.find(AssociatedAttribute, AssociatedAttribute.object_id == fileObj.id).remove()
         if count == 0:
-            fileObj._attributes.clear()
+            self.removedFiles += 1
             self.store.remove(fileObj)
             return
         
@@ -240,18 +241,15 @@ class Library(object):
                     self.store.remove(dirObj)
                 else:
                     dirStat = os.stat(dirObj.path)
-                    if dirObj.lastScan + UPDATE_INTERVAL < thisUpdate:
+                    if int(dirStat.st_mtime) > dirObj.mtime or int(dirStat.st_ctime) > dirObj.ctime:
                         self._updateDir(dirObj, dirStat, False)
-                    else:
-                        if int(dirStat.st_mtime) > dirObj.mtime or int(dirStat.st_ctime) > dirObj.ctime:
-                            self._updateDir(dirObj, dirStat, False)
         
         print "  Scanning for dirty files in not updated files..."
         files = self.store.find(Object, Object.lastScan < int(thisUpdate))
         for fileObj in files:
             if not os.path.isfile(fileObj.realFileName):
                 self.removedFiles += 1
-                fileObj._attributes.clear()
+                self.store.find(AssociatedAttribute, AssociatedAttribute.object_id == fileObj.id).remove()
                 self.store.remove(fileObj)
             else:
                 fileStat = os.stat(fileObj.realFileName)

@@ -3,7 +3,7 @@ import re
 
 class FormattingNode(object):
     def __init__(self, failureSkip = 0):
-        self.failureSkip = 0
+        self.failureSkip = failureSkip
     
     def resolve(self, obj):
         pass
@@ -35,6 +35,7 @@ def buildFormattingChain(s):
         start = match.start()
         if start <> lastPos:
             result += [FormattingNodeStatic(s[lastPos:start])]
+        lastPos = match.end()
         questionMarks = match.group(2)
         skipCount = 0
         if questionMarks is not None:

@@ -46,7 +46,7 @@ class LibraryFS(Fuse):
     def _stattuple(self, statmap):
         return statmap["st_mode"], statmap["st_ino"], statmap["st_dev"], statmap["st_nlink"], statmap["st_uid"], statmap["st_gid"], statmap["st_size"], statmap["st_atime"], statmap["st_mtime"], statmap["st_ctime"]
     
-    def lsxattr(self, path, *args):
+    def listxattr(self, path, *args):
         print "*** lsxattr", path, args
     
     def getxattr(self, path, more1, more2):
@@ -95,7 +95,6 @@ class LibraryFS(Fuse):
         if node is None:
             return
         for child in Store.of(node).find(FSNode, FSNode.parent_id == node.id, FSNode.hidden == False):
-            print child.displayName
             yield child.getDirentry()
 
     def mythread ( self ):

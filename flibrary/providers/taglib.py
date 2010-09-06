@@ -25,17 +25,17 @@ class TaglibProvider(Provider):
         data = fileAttributes
         data[u"class"] = u"audio"
         
-        if title is not None:
+        if title is not None and len(title) > 0:
             data[ATTR_GENERIC_TITLE] = safeEncode(title)
-        if album is not None:
+        if album is not None and len(album) > 0:
             data[ATTR_GENERIC_ALBUM] = safeEncode(album)
-        if artist is not None:
+        if artist is not None and len(artist) > 0:
             data[ATTR_GENERIC_ARTIST] = safeEncode(artist)
-        if genre is not None:
-            data[u"audio/genre"] = safeEncode(genre)
-        if track is not None:
+        if genre is not None and len(genre) > 0:
+            data[ATTR_GENERIC_GENRE] = safeEncode(genre)
+        if track is not None and track > 0:
             data[u"audio/trackno"] = safeEncode(track)
-        if year is not None:
+        if year is not None and year > 0:
             data[ATTR_GENERIC_YEAR] = safeEncode(year)
             
         file = ref.file()
@@ -43,11 +43,19 @@ class TaglibProvider(Provider):
             xiph = file.xiphComment()
             fields = xiph.fieldListMap()
             if "DISCNUMBER" in fields:
-                data[u"audio/discno"] = safeEncode(fields["DISCNUMBER"][0])
+                value = safeEncode(fields["DISCNUMBER"][0])
+                if len(value) > 0 and int(value) > 0:
+                    data[u"audio/discno"] = value
             if "TOTALDISCS" in fields:
-                data[u"audio/totaldiscs"] = safeEncode(fields["TOTALDISCS"][0])
+                value = safeEncode(fields["TOTALDISCS"][0])
+                if len(value) > 0 and int(value) > 0:
+                    data[u"audio/totaldiscs"] = value
             if "TOTALTRACKS" in fields:
-                data[u"audio/totaltracks"] = safeEncode(fields["TOTALTRACKS"][0])
+                value = safeEncode(fields["TOTALTRACKS"][0])
+                if len(value) > 0 and int(value) > 0:
+                    data[u"audio/totaltracks"] = value
             if "RATING:BANSHEE" in fields:
-                data[ATTR_GENERIC_RATING] = safeEncode(fields["RATING:BANSHEE"][0])
+                value = safeEncode(fields["RATING:BANSHEE"][0])
+                if len(value) > 0:
+                    data[ATTR_GENERIC_RATING] = value
         return data

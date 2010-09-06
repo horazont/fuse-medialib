@@ -30,7 +30,7 @@ class FSStructure(object):
                     COMMENT 'reference to the parent node otherwise NULL'
                     REFERENCES fsnode (id),
                 displayName 
-                    VARCHAR(255) NOT NULL 
+                    VARCHAR(255) NOT NULL
                     COMMENT 'display name in dir listing; used as prefix for generators',
                 fullPath 
                     VARCHAR(2047) NOT NULL
@@ -68,22 +68,23 @@ class FSStructure(object):
                 INDEX
                     (parent_id, displayName),
                 INDEX
-                    (fullPath)
+                    (fullPath),
+                INDEX
+                    (kind)
             ) COLLATE=utf8_bin""")
             
             self.store.execute("""CREATE TABLE IF NOT EXISTS `fsfilter` (
                 id 
                     INTEGER AUTO_INCREMENT 
                     PRIMARY KEY,
-                attribute_id 
-                    INTEGER NOT NULL
-                    COMMENT 'reference to the attribute to filter'
-                    REFERENCES attributes (id),
+                attributeName
+                    VARCHAR(255) NOT NULL
+                    COMMENT 'reference to the attribute to filter',
                 kind 
                     INTEGER NOT NULL
                     COMMENT '0 = exact match; 1 = starts-with; 2 = ends-with; 3 = contains; 4 = like; 5 = regex; 6 = none (generator)',
                 value 
-                    VARCHAR(255) NOT NULL 
+                    VARCHAR(255) DEFAULT NULL 
                     COMMENT 'value to match against'
             ) COLLATE=utf8_bin""")
             

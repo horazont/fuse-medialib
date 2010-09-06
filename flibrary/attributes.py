@@ -8,6 +8,7 @@ ATTR_GENERIC_RATING = u"generic/rating"
 ATTR_GENERIC_DATE = u"generic/date"
 ATTR_GENERIC_DATETIME = u"generic/datetime"
 ATTR_GENERIC_LOCATION = u"generic/location"
+ATTR_GENERIC_GENRE = u"generic/genre"
 
 ATTR_CLASS = u"class"
 ATTR_MIME_CLASS = u"generic/mime-type/class"

@@ -16,8 +16,8 @@ lib.addProvider(MimeTypeProvider())
 lib.addProvider(XAttrProviderInheriting())
 lib.addProvider(ExifProvider())
 lib.addProvider(TaglibProvider())
-lib.addDirectory(os.path.expanduser(u"~/Music/"), True, False)
-lib.addDirectory(os.path.expanduser(u"~/Pictures/DigiREF/"), True, False)
+lib.addDirectory(os.path.expanduser(u"~/Music/"), True, False, forceUpdate = True)
+#lib.addDirectory(os.path.expanduser(u"~/Pictures/DigiREF/"), True, False)
 print "Updating library..."
 updatedFiles, updatedDirectories, removedFiles, removedDirectories = lib.update()
 print "done."
